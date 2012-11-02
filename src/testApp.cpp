@@ -2,19 +2,27 @@
 
 //--------------------------------------------------------------
 void testApp::setup(){
+	ofBackground(64, 64, 64);
 
-	ofBackground(40, 100, 40);
-
-	// open an outgoing connection to HOST:PORT
+	// Set up the OSC sender
 	sender.setup(HOST, PORT);
+    // Set up OSC listener so we can get the vis timing right
+    oscRec.setup(23456);
 
-
-    // Let's open the timbre file here.  We'll hard-code the path, for now
     // Eventually, I should shell-script the startup process
-    max1 = 202; // first-pass variables, will make an array later
-    min1 = 0;
-    range1 = abs(max1 - min1);
+    // These hard-coded values are for test/bars.timbre
+    maximums[0] = 202; maximums[1] = 58; maximums[3] = 79;
+    maximums[4] = 62; maximums[5] = 28; maximums[6] = 43;
+
+    minimums[0] = 0; minimums[1] = -97; minimums[3] = -26;
+    minimums[4] = -8; minimums[5] = -74; minimums[6] = -35;
+
+    for (int i = 0; i < 6; i++) {
+        ranges[i] = abs(maximums[i] - minimums[i]);
+    }
+
     windowSizeX = 640;
+    windowSizeY = 480;
 
     timbreIndex = 0;
 
@@ -25,10 +33,6 @@ void testApp::setup(){
         timbreData.push_back(ofToInt(line));
         line = buffer.getNextLine();
     }
-
-    // Set up OSC listener so we can get the vis timing right
-    oscRec.setup(23456);
-
 }
 
 //--------------------------------------------------------------
@@ -45,19 +49,25 @@ void testApp::update(){
 //--------------------------------------------------------------
 void testApp::draw(){
     // Scale to the window size
-    int nextScaledTimbre = (int)(timbreData[timbreIndex] * ((float)windowSizeX / (float)range1));
+    // GOD I NEED TO MAKE THESE FUNCTIONS
+    int nextScaledTimbreX = (int)((timbreData[timbreIndex] - minimums[0]) * ((float)windowSizeX / (float)ranges[0]) );
+    int nextScaledTimbreY = (int)((timbreData[timbreIndex + 1] - minimums[1]) * ((float)windowSizeY / (float)ranges[1]));
     ofSetColor(255,0,0);
-    ofCircle(nextScaledTimbre,240,5);  
+    ofCircle(nextScaledTimbreX,nextScaledTimbreY,25);  
 
     if (timbreIndex -6 >= 0) {
-        int oldScaledTimbre = (int)(timbreData[timbreIndex -6] * ((float)windowSizeX / (float)range1));
+        int oldScaledTimbreX = (int)((timbreData[timbreIndex-6] - minimums[0]) * ((float)windowSizeX / (float)ranges[0]));
+        int oldScaledTimbreY = (int)((timbreData[timbreIndex-6 + 1] - minimums[1]) * ((float)windowSizeY / (float)ranges[1]));
         ofSetColor(0,0,255);
-        ofCircle(oldScaledTimbre,240,5);
+        ofCircle(oldScaledTimbreX,oldScaledTimbreY,12);
     }
 }
 
 //--------------------------------------------------------------
 void testApp::keyPressed(int key){
+    if (key == 32) {
+        timbreIndex = timbreIndex + 6;
+    }
 }
 
 //--------------------------------------------------------------
@@ -65,24 +75,19 @@ void testApp::keyReleased(int key){
 
 }
 
-
 // --------------------------------------------------------------
 void testApp::mouseMoved(int x, int y){
-    // Need to scale things to be 0 to 202 here
+    // Need to scale things to the timbres here
     // this is super hacky because I'll have to do kinect scaling properly later
 
-	ofxOscMessage sendX;
-	int scaledX = (int)(x * ((float)range1 / (float)windowSizeX));
-    sendX.setAddress("/mouse/position/x");
-	sendX.addIntArg(scaledX);
+	ofxOscMessage sendLocationData;
+	int scaledX = (int)(x * ((float)ranges[0] / (float)windowSizeX) + minimums[0]);
+    int scaledY = (int)(y * ((float)ranges[1] / (float)windowSizeY) + minimums[1]);
+    sendLocationData.setAddress("/mouse/position");
+	sendLocationData.addIntArg(scaledX);
+    sendLocationData.addIntArg(scaledY);
     // ofLog(OF_LOG_NOTICE, ofToString(scaledX));
-	sender.sendMessage(sendX);
-    
-    ofxOscMessage sendY;
-    sendY.setAddress("/mouse/position/y");
-	sendY.addIntArg(y);
-    // ofLog(OF_LOG_NOTICE, ofToString(y));
-	sender.sendMessage(sendY);
+	sender.sendMessage(sendLocationData);
 }
 
 //--------------------------------------------------------------

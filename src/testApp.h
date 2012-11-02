@@ -27,16 +27,18 @@ class testApp : public ofBaseApp {
 
 		ofTrueTypeFont font;
 		ofxOscSender sender;
+        ofxOscReceiver oscRec;
     
-        int max1;
-        int min1;
-        int range1;
+        int maximums[6];
+        int minimums[6];
+        int ranges[6];
         int windowSizeX;
+        int windowSizeY;
 
         int timbreIndex;
         vector<int> timbreData;
 
-        ofxOscReceiver oscRec;
+        
 
 };
 
