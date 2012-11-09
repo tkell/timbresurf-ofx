@@ -28,7 +28,11 @@ class testApp : public ofBaseApp {
 		ofTrueTypeFont font;
 		ofxOscSender sender;
         ofxOscReceiver oscRec;
+        ofBuffer buffer;
     
+        int track_number;
+        int difficulty_rating;
+
         int maximums[6];
         int minimums[6];
         int ranges[6];

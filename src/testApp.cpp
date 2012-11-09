@@ -9,30 +9,57 @@ void testApp::setup(){
     // Set up OSC listener so we can get the vis timing right
     oscRec.setup(23456);
 
-    // Eventually, I should shell-script the startup process
-    // These hard-coded values are for test/bars.timbre
-    maximums[0] = 202; maximums[1] = 58; maximums[3] = 79;
-    maximums[4] = 62; maximums[5] = 28; maximums[6] = 43;
+    // Select the track and difficulty here:
+    cout << "Please select a track\n";
+    cout << "1:  Onefourfiveone - D\n";
+    cin >> track_number;
 
-    minimums[0] = 0; minimums[1] = -97; minimums[3] = -26;
-    minimums[4] = -8; minimums[5] = -74; minimums[6] = -35;
+    cout << "Please select a difficulty\n";
+    cout << "1:  Bars\n";
+    cout << "2:  Beats\n";
+    cout << "3:  Tatums\n";
+    cout << "4:  Segments\n";
+    cin >> difficulty_rating;
 
+    cout << "Loading...\n";
+    // 1451 - D
+    if (track_number == 1) {
+            // This is for bars and beats and tatums  Will do for now
+            maximums[0] = 261; maximums[1] = 142; maximums[3] = 162;
+            maximums[4] = 107; maximums[5] = 104; maximums[6] = 65;
+
+            minimums[0] = -61; minimums[1] = -157; minimums[3] = -98;
+            minimums[4] = -37; minimums[5] = -108; minimums[6] = -64;
+
+        if (difficulty_rating == 1) {
+            buffer = ofBufferFromFile("1451.bars.timbre"); // reading into the buffer
+        }
+        else if (difficulty_rating == 2) {
+            buffer = ofBufferFromFile("1451.beats.timbre"); // reading into the buffer
+        }
+        else if (difficulty_rating == 3) {
+            buffer = ofBufferFromFile("1451.tatums.timbre"); // reading into the buffer
+        }
+    }
+
+    // Get the ranges
     for (int i = 0; i < 6; i++) {
         ranges[i] = abs(maximums[i] - minimums[i]);
     }
 
     windowSizeX = 640;
     windowSizeY = 480;
-
     timbreIndex = 0;
 
+    // Load the timbre data
     string line;
-    ofBuffer buffer = ofBufferFromFile("bars.timbre"); // reading into the buffer
     line = buffer.getNextLine();
     while (line != "") {
         timbreData.push_back(ofToInt(line));
         line = buffer.getNextLine();
     }
+
+    cout << "Loaded. Please boot the ChucK app\n";
 }
 
 //--------------------------------------------------------------
