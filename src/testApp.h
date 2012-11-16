@@ -25,6 +25,9 @@ class testApp : public ofBaseApp {
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
+        ofEasyCam cam; 
+        ofLight light;
+
 		ofTrueTypeFont font;
 		ofxOscSender sender;
         ofxOscReceiver oscRec;
@@ -32,17 +35,20 @@ class testApp : public ofBaseApp {
     
         int track_number;
         int difficulty_rating;
+        char attract_mode;
+        int sphereRadius;
+        vector<ofPoint> spheresRH;
+        vector<ofPoint> spheresLH;
 
         int maximums[6];
         int minimums[6];
         int ranges[6];
+
         int windowSizeX;
         int windowSizeY;
+        int windowSizeZ;
 
         int timbreIndex;
         vector<int> timbreData;
-
-        
-
 };
 
