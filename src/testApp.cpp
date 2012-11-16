@@ -21,8 +21,8 @@ void testApp::setup(){
     cout << "4:  Segments\n";
     cin >> difficulty_rating;
 
-    cout << "Enter V to visualize, any other key to play\n";
-    cin >> attract_mode;
+    cout << "Enter V to visualize, E to explore, any other key to play\n";
+    cin >> mode;
 
     cout << "Loading...\n";
     // 1451 - D
@@ -36,12 +36,15 @@ void testApp::setup(){
 
         if (difficulty_rating == 1) {
             buffer = ofBufferFromFile("1451.bars.timbre"); // reading into the buffer
+            sphereRadius = 10;
         }
         else if (difficulty_rating == 2) {
             buffer = ofBufferFromFile("1451.beats.timbre"); // reading into the buffer
+            sphereRadius = 5;
         }
         else if (difficulty_rating == 3) {
             buffer = ofBufferFromFile("1451.tatums.timbre"); // reading into the buffer
+            sphereRadius = 2;
         }
     }
 
@@ -50,12 +53,11 @@ void testApp::setup(){
         ranges[i] = abs(maximums[i] - minimums[i]);
     }
 
-
     // Set up our new, 3D world!
     windowSizeX = 1024;
     windowSizeY = 768;
     windowSizeZ = 768;
-    sphereRadius = 5;
+    
     
     // Load the timbre data
     timbreIndex = 0;
@@ -64,6 +66,23 @@ void testApp::setup(){
     while (line != "") {
         timbreData.push_back(ofToInt(line));
         line = buffer.getNextLine();
+    }
+
+    // If we're exploring, load ALL THE THINGS
+    if (mode == 'E') {
+        for (int i = 0; i < timbreData.size(); i+=6) {
+            int nextScaledTimbreRHX = (int) ((timbreData[i] - ((maximums[0] + minimums[0]) / 2)) * ((float)windowSizeX / (float)ranges[0]) );
+            int nextScaledTimbreRHY = (int) ((timbreData[i + 1] - ((maximums[1] + minimums[1]) / 2)) * ((float)windowSizeY / (float)ranges[1]));
+            int nextScaledTimbreRHZ = (int) ((timbreData[i + 2] - ((maximums[2] + minimums[2]) / 2)) * ((float)windowSizeZ / (float)ranges[2]));
+            p1.set(nextScaledTimbreRHX, nextScaledTimbreRHY, nextScaledTimbreRHZ);
+            spheresRH.push_back(p1);
+
+            int nextScaledTimbreLHX = (int)((timbreData[i + 3] - ((maximums[3] + minimums[3]) / 2)) * ((float)windowSizeX / (float)ranges[3]));
+            int nextScaledTimbreLHY = (int)((timbreData[i + 4] - ((maximums[4] + minimums[4]) / 2)) * ((float)windowSizeY / (float)ranges[4]));
+            int nextScaledTimbreLHZ = (int)((timbreData[i + 5] - ((maximums[5] + minimums[5]) / 2)) * ((float)windowSizeZ / (float)ranges[5]));
+            p2.set(nextScaledTimbreLHX, nextScaledTimbreLHY, nextScaledTimbreLHZ);
+            spheresLH.push_back(p2);
+        }
     }
 
     cout << "Loaded. Please boot the ChucK app\n";
@@ -83,15 +102,11 @@ void testApp::update(){
 
 //--------------------------------------------------------------
 void testApp::draw(){
-    // move these guys out?
-    ofPoint p1; 
-    ofPoint p2; 
-
     ofEnableLighting();
     light.enable();
 
-    // Clear the draw vectors, unless we're in attract mode
-    if (attract_mode != 'V') {
+    // Clear the draw vectors, unless we're in attract or explore modes
+    if (mode != 'V' && mode != 'E') {
         spheresRH.clear();
         spheresLH.clear();
     }
@@ -129,25 +144,27 @@ void testApp::draw(){
 
     // GOD I NEED TO MAKE THESE FUNCTIONS
     // Draw red for right hand!
-    int nextScaledTimbreRHX = (int) ((timbreData[timbreIndex] - ((maximums[0] + minimums[0]) / 2)) * ((float)windowSizeX / (float)ranges[0]) );
-    int nextScaledTimbreRHY = (int) ((timbreData[timbreIndex + 1] - ((maximums[1] + minimums[1]) / 2)) * ((float)windowSizeY / (float)ranges[1]));
-    int nextScaledTimbreRHZ = (int) ((timbreData[timbreIndex + 2] - ((maximums[2] + minimums[2]) / 2)) * ((float)windowSizeZ / (float)ranges[2]));
+    if (mode != 'E') {
+        int nextScaledTimbreRHX = (int) ((timbreData[timbreIndex] - ((maximums[0] + minimums[0]) / 2)) * ((float)windowSizeX / (float)ranges[0]) );
+        int nextScaledTimbreRHY = (int) ((timbreData[timbreIndex + 1] - ((maximums[1] + minimums[1]) / 2)) * ((float)windowSizeY / (float)ranges[1]));
+        int nextScaledTimbreRHZ = (int) ((timbreData[timbreIndex + 2] - ((maximums[2] + minimums[2]) / 2)) * ((float)windowSizeZ / (float)ranges[2]));
 
-    p1.set(nextScaledTimbreRHX, nextScaledTimbreRHY, nextScaledTimbreRHZ);
-    spheresRH.push_back(p1);
+        p1.set(nextScaledTimbreRHX, nextScaledTimbreRHY, nextScaledTimbreRHZ);
+        spheresRH.push_back(p1);
+
+        // Draw blue for left hand!
+        int nextScaledTimbreLHX = (int)((timbreData[timbreIndex + 3] - ((maximums[3] + minimums[3]) / 2)) * ((float)windowSizeX / (float)ranges[3]));
+        int nextScaledTimbreLHY = (int)((timbreData[timbreIndex + 4] - ((maximums[4] + minimums[4]) / 2)) * ((float)windowSizeY / (float)ranges[4]));
+        int nextScaledTimbreLHZ = (int)((timbreData[timbreIndex + 5] - ((maximums[5] + minimums[5]) / 2)) * ((float)windowSizeZ / (float)ranges[5]));
+        
+        p2.set(nextScaledTimbreLHX, nextScaledTimbreLHY, nextScaledTimbreLHZ);
+        spheresLH.push_back(p2);
+    }
 
     ofSetColor(255, 0, 0);
     for (int i=0; i< spheresRH.size(); i++) {
         ofSphere(spheresRH[i], sphereRadius);
     }
-
-    // Draw blue for left hand!
-    int nextScaledTimbreLHX = (int)((timbreData[timbreIndex-6 + 3] - ((maximums[3] + minimums[3]) / 2)) * ((float)windowSizeX / (float)ranges[3]));
-    int nextScaledTimbreLHY = (int)((timbreData[timbreIndex-6 + 4] - ((maximums[4] + minimums[4]) / 2)) * ((float)windowSizeY / (float)ranges[4]));
-    int nextScaledTimbreLHZ = (int)((timbreData[timbreIndex-6 + 5] - ((maximums[5] + minimums[5]) / 2)) * ((float)windowSizeZ / (float)ranges[5]));
-    
-    p2.set(nextScaledTimbreLHX, nextScaledTimbreLHY, nextScaledTimbreLHZ);
-    spheresLH.push_back(p2);
 
     ofSetColor(0, 0, 255);
     for (int i=0; i< spheresLH.size(); i++) {
@@ -176,11 +193,10 @@ void testApp::keyReleased(int key){
 // --------------------------------------------------------------
 void testApp::mouseMoved(int x, int y){
     // Need to scale things to the timbres here
-    // this is super hacky because I'll have to do kinect scaling properly later
-
+    // this is super hacky / broken because I'll have to do kinect scaling properly later
 	ofxOscMessage sendLocationData;
-	int scaledX = (int)(x * ((float)ranges[0] / (float)windowSizeX) + minimums[0]);
-    int scaledY = (int)(y * ((float)ranges[1] / (float)windowSizeY) + minimums[1]);
+	int scaledX = (int)(x * ((float)ranges[0] / (float)windowSizeX) + ((maximums[0] + minimums[0]) / 2));
+    int scaledY = (int)(y * ((float)ranges[1] / (float)windowSizeY) + ((maximums[1] + minimums[1]) / 2));
     sendLocationData.setAddress("/mouse/position");
 	sendLocationData.addIntArg(scaledX);
     sendLocationData.addIntArg(scaledY);

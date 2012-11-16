@@ -35,8 +35,11 @@ class testApp : public ofBaseApp {
     
         int track_number;
         int difficulty_rating;
-        char attract_mode;
+        char mode;
         int sphereRadius;
+
+        ofPoint p1; 
+        ofPoint p2; 
         vector<ofPoint> spheresRH;
         vector<ofPoint> spheresLH;
 
