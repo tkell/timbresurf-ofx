@@ -2,8 +2,6 @@
 
 //--------------------------------------------------------------
 void testApp::setup(){
-	ofBackground(16, 16, 16);
-    ofSetSmoothLighting(true);
 	// Set up the OSC sender
 	sender.setup(HOST, PORT);
     // Set up OSC listener so we can get the vis timing right
@@ -12,6 +10,7 @@ void testApp::setup(){
     // Select the track and difficulty here:
     cout << "Please select a track\n";
     cout << "1:  Onefourfiveone - D\n";
+    cout << "2:  Michael Jackson - Billie Jean\n";
     cin >> track_number;
 
     cout << "Please select a difficulty\n";
@@ -21,19 +20,22 @@ void testApp::setup(){
     cout << "4:  Segments\n";
     cin >> difficulty_rating;
 
-    cout << "Enter V to visualize, E to explore, any other key to play\n";
+    cout << "Enter V to visualize, E to explore, P to play\n";
     cin >> mode;
 
     cout << "Loading...\n";
+
+
+    // This is everything from 1451 and Billie Jean
+    maximums[0] = 273; maximums[1] = 145; maximums[2] = 210;
+    maximums[3] = 125; maximums[4] = 272; maximums[5] = 89;
+
+    minimums[0] = -69; minimums[1] = -232; minimums[2] = -228;
+    minimums[3] = -38; minimums[4] = -131; minimums[5] = -71;
+
+
     // 1451 - D
     if (track_number == 1) {
-            // This is for bars and beats and tatums  Will do for now
-            maximums[0] = 261; maximums[1] = 142; maximums[2] = 162;
-            maximums[3] = 107; maximums[4] = 104; maximums[5] = 65;
-
-            minimums[0] = -61; minimums[1] = -157; minimums[2] = -98;
-            minimums[3] = -37; minimums[4] = -108; minimums[5] = -64;
-
         if (difficulty_rating == 1) {
             buffer = ofBufferFromFile("1451.bars.timbre"); // reading into the buffer
             sphereRadius = 10;
@@ -46,6 +48,30 @@ void testApp::setup(){
             buffer = ofBufferFromFile("1451.tatums.timbre"); // reading into the buffer
             sphereRadius = 2;
         }
+        else if (difficulty_rating == 4) {
+            buffer = ofBufferFromFile("1451.segments.timbre"); // reading into the buffer
+            sphereRadius = 1;
+        }
+    }
+
+     // Michael Jackson - Billie Jean
+    if (track_number == 2) {
+        if (difficulty_rating == 1) {
+            buffer = ofBufferFromFile("billiejean.bars.timbre"); // reading into the buffer
+            sphereRadius = 10;
+        }
+        else if (difficulty_rating == 2) {
+            buffer = ofBufferFromFile("billiejean.beats.timbre"); // reading into the buffer
+            sphereRadius = 5;
+        }
+        else if (difficulty_rating == 3) {
+            buffer = ofBufferFromFile("billiejean.tatums.timbre"); // reading into the buffer
+            sphereRadius = 2;
+        }
+        else if (difficulty_rating == 4) {
+            buffer = ofBufferFromFile("billiejean.segments.timbre"); // reading into the buffer
+            sphereRadius = 1;
+        }
     }
 
     // Get the ranges
@@ -57,7 +83,10 @@ void testApp::setup(){
     windowSizeX = 1024;
     windowSizeY = 768;
     windowSizeZ = 768;
-    
+    ofBackground(16, 16, 16);
+    glEnable(GL_DEPTH_TEST);
+    ofSetSmoothLighting(true);
+    light.setPosition(0, 0, 768);
     
     // Load the timbre data
     timbreIndex = 0;
@@ -114,9 +143,8 @@ void testApp::draw(){
     // 0, 0, 0 is now center, not top-left
     // And we rotate, just a little
     cam.begin();
-
-    ofRotateX(ofRadToDeg(.25));
-	ofRotateY(ofRadToDeg(-.25));
+    ofRotateX(ofRadToDeg(.05));
+	ofRotateY(ofRadToDeg(-.05));
 
     ofPushMatrix();
     // Draw X, Y, Z axes here
@@ -132,6 +160,9 @@ void testApp::draw(){
     p1.set(0, 0, -windowSizeZ * 8); 
     p2.set(0, 0, windowSizeZ * 8); 
     ofLine(p1, p2);
+
+    ofSetColor(225, 225, 225);
+    ofSphere(controlPoint, sphereRadius);
 
     // We'll get these from the kinect once we've got it up
     //    int currentRHX = 0;
@@ -171,9 +202,10 @@ void testApp::draw(){
         ofSphere(spheresLH[i], sphereRadius);
     }
 
+
+
     ofPopMatrix();
 	cam.end();
-
     ofDisableLighting();
 }
 
@@ -192,15 +224,26 @@ void testApp::keyReleased(int key){
 
 // --------------------------------------------------------------
 void testApp::mouseMoved(int x, int y){
-    // Need to scale things to the timbres here
-    // this is super hacky / broken because I'll have to do kinect scaling properly later
-	ofxOscMessage sendLocationData;
-	int scaledX = (int)(x * ((float)ranges[0] / (float)windowSizeX) + ((maximums[0] + minimums[0]) / 2));
-    int scaledY = (int)(y * ((float)ranges[1] / (float)windowSizeY) + ((maximums[1] + minimums[1]) / 2));
+    // Translate to center for my mouse-based control point
+    int transX = x - windowSizeX / 2;
+    int transY = -1 * (y - windowSizeY / 2);
+    controlPoint.set(transX, transY, controlPoint.z);
+
+	// Need to scale things to the timbres here
+    // This will have to change once I get the kinect / leap in
+    ofxOscMessage sendLocationData;
+	int scaledX = (int)(transX * ((float)ranges[0] / (float)windowSizeX) + (maximums[0] + minimums[0]) / 2);
+    int scaledY = (int)(transY * ((float)ranges[1] / (float)windowSizeY) + (maximums[1] + minimums[1]) / 2);
+    int scaledZ = (int)(controlPoint.z * ((float)ranges[2] / (float)windowSizeZ) + (maximums[2] + minimums[2]) / 2);
     sendLocationData.setAddress("/mouse/position");
+
 	sendLocationData.addIntArg(scaledX);
     sendLocationData.addIntArg(scaledY);
-    // ofLog(OF_LOG_NOTICE, ofToString(scaledX));
+    sendLocationData.addIntArg(scaledZ);
+    //ofLog(OF_LOG_NOTICE, ofToString(scaledX));
+    //ofLog(OF_LOG_NOTICE, ofToString(scaledY));
+    //ofLog(OF_LOG_NOTICE, ofToString(scaledZ));
+
 	sender.sendMessage(sendLocationData);
 }
 
@@ -211,6 +254,13 @@ void testApp::mouseDragged(int x, int y, int button){
 
 //--------------------------------------------------------------
 void testApp::mousePressed(int x, int y, int button){
+    // This moves Z around, for now
+    if (button == 3) {
+        controlPoint.set(controlPoint.x, controlPoint.y, controlPoint.z - 50);
+    }
+    if (button == 4) {
+        controlPoint.set(controlPoint.x, controlPoint.y, controlPoint.z + 50);
+    }
 }
 
 //--------------------------------------------------------------

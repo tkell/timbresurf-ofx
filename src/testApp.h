@@ -39,7 +39,8 @@ class testApp : public ofBaseApp {
         int sphereRadius;
 
         ofPoint p1; 
-        ofPoint p2; 
+        ofPoint p2;
+        ofPoint controlPoint; 
         vector<ofPoint> spheresRH;
         vector<ofPoint> spheresLH;
 
