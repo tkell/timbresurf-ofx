@@ -1,5 +1,4 @@
 #include "testApp.h"
-
 //--------------------------------------------------------------
 void testApp::setup(){
 	// Set up the OSC sender
@@ -25,14 +24,12 @@ void testApp::setup(){
 
     cout << "Loading...\n";
 
-
     // This is everything from 1451 and Billie Jean
     maximums[0] = 273; maximums[1] = 145; maximums[2] = 210;
     maximums[3] = 125; maximums[4] = 272; maximums[5] = 89;
 
     minimums[0] = -69; minimums[1] = -232; minimums[2] = -228;
     minimums[3] = -38; minimums[4] = -131; minimums[5] = -71;
-
 
     // 1451 - D
     if (track_number == 1) {
@@ -80,13 +77,18 @@ void testApp::setup(){
     }
 
     // Set up our new, 3D world!
+    // 0, 0, 0 is now center, not top-left
     windowSizeX = 1024;
     windowSizeY = 768;
     windowSizeZ = 768;
-    ofBackground(16, 16, 16);
+    ofBackground(0, 0, 0);
     glEnable(GL_DEPTH_TEST);
+    // Move the camera so we can see everything
+    cam.setDistance(windowSizeZ * 1.5);
+    cam.move(windowSizeX / 16, windowSizeY / 16, 0);
+    cam.pan(5);
     ofSetSmoothLighting(true);
-    light.setPosition(0, 0, 768);
+    light.setPosition(0, 0, windowSizeZ);
     
     // Load the timbre data
     timbreIndex = 0;
@@ -115,7 +117,6 @@ void testApp::setup(){
     }
 
     cout << "Loaded. Please boot the ChucK app\n";
-
 }
 
 //--------------------------------------------------------------
@@ -126,7 +127,6 @@ void testApp::update(){
         oscRec.getNextMessage(&m);
         timbreIndex = timbreIndex + 6 % timbreData.size();   
     }
-
 }
 
 //--------------------------------------------------------------
@@ -140,16 +140,11 @@ void testApp::draw(){
         spheresLH.clear();
     }
 
-    // 0, 0, 0 is now center, not top-left
-    // And we rotate, just a little
     cam.begin();
-    ofRotateX(ofRadToDeg(.05));
-	ofRotateY(ofRadToDeg(-.05));
-
     ofPushMatrix();
     // Draw X, Y, Z axes here
     ofSetColor(0, 255, 0);
-    p1.set(-windowSizeX * 8 ,0,0); 
+    p1.set(-windowSizeX * 8, 0,0); 
     p2.set(windowSizeX * 8, 0, 0); 
     ofLine(p1, p2);
 
@@ -174,7 +169,7 @@ void testApp::draw(){
     //    int currentLHZ = 0;
 
     // GOD I NEED TO MAKE THESE FUNCTIONS
-    // Draw red for right hand!
+        // Draw red for right hand!
     if (mode != 'E') {
         int nextScaledTimbreRHX = (int) ((timbreData[timbreIndex] - ((maximums[0] + minimums[0]) / 2)) * ((float)windowSizeX / (float)ranges[0]) );
         int nextScaledTimbreRHY = (int) ((timbreData[timbreIndex + 1] - ((maximums[1] + minimums[1]) / 2)) * ((float)windowSizeY / (float)ranges[1]));
@@ -201,8 +196,6 @@ void testApp::draw(){
     for (int i=0; i< spheresLH.size(); i++) {
         ofSphere(spheresLH[i], sphereRadius);
     }
-
-
 
     ofPopMatrix();
 	cam.end();
