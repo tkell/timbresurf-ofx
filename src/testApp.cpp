@@ -6,6 +6,9 @@ void testApp::setup(){
     // Set up OSC listener so we can get the vis timing right
     oscRec.setup(23456);
 
+    // Set up the kinect lisenter
+    kinectRec.setup(7110);
+
     // Select the track and difficulty here:
     cout << "Please select a track\n";
     cout << "1:  Onefourfiveone - D\n";
@@ -75,6 +78,9 @@ void testApp::setup(){
     for (int i = 0; i < 6; i++) {
         ranges[i] = abs(maximums[i] - minimums[i]);
     }
+    transX = 0;
+    transY = 0;
+    transZ = 0;
 
     // Set up our new, 3D world!
     // 0, 0, 0 is now center, not top-left
@@ -84,7 +90,7 @@ void testApp::setup(){
     ofBackground(0, 0, 0);
     glEnable(GL_DEPTH_TEST);
     // Move the camera so we can see everything
-    cam.setDistance(windowSizeZ * 1.5);
+    cam.setDistance(windowSizeZ * 1);
     cam.move(windowSizeX / 16, windowSizeY / 16, 0);
     cam.pan(5);
     ofSetSmoothLighting(true);
@@ -121,12 +127,81 @@ void testApp::setup(){
 
 //--------------------------------------------------------------
 void testApp::update(){
-    // Listen for new osc message
+    // Update the visuals
     while(oscRec.hasWaitingMessages()) {
         ofxOscMessage m;
         oscRec.getNextMessage(&m);
-        timbreIndex = timbreIndex + 6 % timbreData.size();   
+        if (m.getAddress() == "/visuals/tick") {
+            timbreIndex = timbreIndex + 6 % timbreData.size();  
+        }
     }
+    // Get location data
+    while(kinectRec.hasWaitingMessages()) {
+        ofxOscMessage m;
+        kinectRec.getNextMessage(&m);
+
+        // what the fuck, kinect.
+        // The bad crazy:  my hands appear to be REVERSED.  
+        // so:  
+        if (m.getAddress() == "/joint") {
+            if (m.getArgAsString(0) == "r_hand") {
+                currentLHX = m.getArgAsFloat(2);
+                currentLHY = m.getArgAsFloat(3);
+                currentLHZ = m.getArgAsFloat(4);
+            }
+            else if (m.getArgAsString(0) == "l_hand") {
+                currentRHX = m.getArgAsFloat(2);
+                currentRHY = m.getArgAsFloat(3);
+                currentRHZ = m.getArgAsFloat(4);
+            }
+           else if (m.getArgAsString(0) == "torso") {
+                currentTorsoX = m.getArgAsFloat(2);
+                currentTorsoY = m.getArgAsFloat(3);
+                currentTorsoZ = m.getArgAsFloat(4);
+            }
+        }
+    }
+
+    // Scale
+    float newX = (currentRHX - currentTorsoX) * windowSizeX * 3;
+    float newY = ((1 - currentTorsoY) - (1 - currentRHY)) * windowSizeY * -3;
+    float newZ = (currentRHZ - (currentTorsoZ * 0.60)) * windowSizeZ * 3;
+
+    // Ignore garbage
+    if (abs(newX - transX) > 300) {
+        newX = transX;
+    }
+    if (abs(newY - transY) > 300) {
+        newY = transY;
+    }
+    if (abs(newZ - transZ) > 300) {
+        newZ = transZ;
+    }
+
+    // Smooth
+    transX = (int) ((transX * 0.5 + newX ) / 1.5);
+    transY = (int) ((transY * 0.5 + newY) / 1.5);
+    transZ = (int) ((transY * 0.5 + newY) / 1.5);
+
+    // Log & update
+    ofLog(OF_LOG_NOTICE, ofToString(transX));
+    ofLog(OF_LOG_NOTICE, ofToString(transY));
+    ofLog(OF_LOG_NOTICE, ofToString(transZ));
+    controlPoint.set(transX, transY, transZ);
+
+    // Send
+    ofxOscMessage sendLocationData;
+	int scaledX = (int)(transX * ((float)ranges[0] / (float)windowSizeX) + (maximums[0] + minimums[0]) / 2);
+    int scaledY = (int)(transY * ((float)ranges[1] / (float)windowSizeY) + (maximums[1] + minimums[1]) / 2);
+    int scaledZ = (int)(transX * ((float)ranges[2] / (float)windowSizeZ) + (maximums[2] + minimums[2]) / 2);
+    sendLocationData.setAddress("/mouse/position");
+
+	sendLocationData.addIntArg(scaledX);
+    sendLocationData.addIntArg(scaledY);
+    sendLocationData.addIntArg(scaledZ);
+	sender.sendMessage(sendLocationData);
+
+
 }
 
 //--------------------------------------------------------------
@@ -157,16 +232,8 @@ void testApp::draw(){
     ofLine(p1, p2);
 
     ofSetColor(225, 225, 225);
-    ofSphere(controlPoint, sphereRadius);
+    ofSphere(controlPoint, 20);
 
-    // We'll get these from the kinect once we've got it up
-    //    int currentRHX = 0;
-    //    int currentRHY = 0;
-    //    int currentRHZ = 0;
-
-    //    int currentLHX = 0;
-    //    int currentLHY = 0;
-    //    int currentLHZ = 0;
 
     // GOD I NEED TO MAKE THESE FUNCTIONS
         // Draw red for right hand!
@@ -217,27 +284,23 @@ void testApp::keyReleased(int key){
 
 // --------------------------------------------------------------
 void testApp::mouseMoved(int x, int y){
-    // Translate to center for my mouse-based control point
-    int transX = x - windowSizeX / 2;
-    int transY = -1 * (y - windowSizeY / 2);
-    controlPoint.set(transX, transY, controlPoint.z);
 
-	// Need to scale things to the timbres here
-    // This will have to change once I get the kinect / leap in
-    ofxOscMessage sendLocationData;
-	int scaledX = (int)(transX * ((float)ranges[0] / (float)windowSizeX) + (maximums[0] + minimums[0]) / 2);
-    int scaledY = (int)(transY * ((float)ranges[1] / (float)windowSizeY) + (maximums[1] + minimums[1]) / 2);
-    int scaledZ = (int)(controlPoint.z * ((float)ranges[2] / (float)windowSizeZ) + (maximums[2] + minimums[2]) / 2);
-    sendLocationData.setAddress("/mouse/position");
+//	// Need to scale things to the timbres here
+//    // This will have to change once I get the kinect / leap in
+//    ofxOscMessage sendLocationData;
+//	int scaledX = (int)(transX * ((float)ranges[0] / (float)windowSizeX) + (maximums[0] + minimums[0]) / 2);
+//    int scaledY = (int)(transY * ((float)ranges[1] / (float)windowSizeY) + (maximums[1] + minimums[1]) / 2);
+//    int scaledZ = (int)(controlPoint.z * ((float)ranges[2] / (float)windowSizeZ) + (maximums[2] + minimums[2]) / 2);
+//    sendLocationData.setAddress("/mouse/position");
 
-	sendLocationData.addIntArg(scaledX);
-    sendLocationData.addIntArg(scaledY);
-    sendLocationData.addIntArg(scaledZ);
-    //ofLog(OF_LOG_NOTICE, ofToString(scaledX));
-    //ofLog(OF_LOG_NOTICE, ofToString(scaledY));
-    //ofLog(OF_LOG_NOTICE, ofToString(scaledZ));
+//	sendLocationData.addIntArg(scaledX);
+//    sendLocationData.addIntArg(scaledY);
+//    sendLocationData.addIntArg(scaledZ);
+//    //ofLog(OF_LOG_NOTICE, ofToString(scaledX));
+//    //ofLog(OF_LOG_NOTICE, ofToString(scaledY));
+//    //ofLog(OF_LOG_NOTICE, ofToString(scaledZ));
 
-	sender.sendMessage(sendLocationData);
+//	sender.sendMessage(sendLocationData);
 }
 
 //--------------------------------------------------------------
@@ -246,14 +309,8 @@ void testApp::mouseDragged(int x, int y, int button){
 }
 
 //--------------------------------------------------------------
-void testApp::mousePressed(int x, int y, int button){
-    // This moves Z around, for now
-    if (button == 3) {
-        controlPoint.set(controlPoint.x, controlPoint.y, controlPoint.z - 50);
-    }
-    if (button == 4) {
-        controlPoint.set(controlPoint.x, controlPoint.y, controlPoint.z + 50);
-    }
+void testApp::mousePressed(int x, int y, int button) {
+
 }
 
 //--------------------------------------------------------------

@@ -31,6 +31,7 @@ class testApp : public ofBaseApp {
 		ofTrueTypeFont font;
 		ofxOscSender sender;
         ofxOscReceiver oscRec;
+        ofxOscReceiver kinectRec;
         ofBuffer buffer;
     
         int track_number;
@@ -43,6 +44,20 @@ class testApp : public ofBaseApp {
         ofPoint controlPoint; 
         vector<ofPoint> spheresRH;
         vector<ofPoint> spheresLH;
+
+        float currentRHX;
+        float currentRHY;
+        float currentRHZ;
+        float currentLHX;
+        float currentLHY;
+        float currentLHZ;
+        float currentTorsoX;
+        float currentTorsoY;
+        float currentTorsoZ;
+        int transX;
+        int transY;
+        int transZ;
+    
 
         int maximums[6];
         int minimums[6];
