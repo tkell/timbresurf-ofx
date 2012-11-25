@@ -249,13 +249,13 @@ void testApp::draw(){
         p1.set(nextScaledTimbreRHX, nextScaledTimbreRHY, nextScaledTimbreRHZ);
         spheresRH.push_back(p1);
 
-        // Draw blue for left hand!
-        int nextScaledTimbreLHX = (int)((timbreData[timbreIndex + 3] - ((maximums[3] + minimums[3]) / 2)) * ((float)windowSizeX / (float)ranges[3]));
-        int nextScaledTimbreLHY = (int)((timbreData[timbreIndex + 4] - ((maximums[4] + minimums[4]) / 2)) * ((float)windowSizeY / (float)ranges[4]));
-        int nextScaledTimbreLHZ = (int)((timbreData[timbreIndex + 5] - ((maximums[5] + minimums[5]) / 2)) * ((float)windowSizeZ / (float)ranges[5]));
-        
-        p2.set(nextScaledTimbreLHX, nextScaledTimbreLHY, nextScaledTimbreLHZ);
-        spheresLH.push_back(p2);
+        // CURRENTLY NOT DOING BLUE Draw blue for left hand!
+//        int nextScaledTimbreLHX = (int)((timbreData[timbreIndex + 3] - ((maximums[3] + minimums[3]) / 2)) * ((float)windowSizeX / (float)ranges[3]));
+//        int nextScaledTimbreLHY = (int)((timbreData[timbreIndex + 4] - ((maximums[4] + minimums[4]) / 2)) * ((float)windowSizeY / (float)ranges[4]));
+//        int nextScaledTimbreLHZ = (int)((timbreData[timbreIndex + 5] - ((maximums[5] + minimums[5]) / 2)) * ((float)windowSizeZ / (float)ranges[5]));
+//        
+//        p2.set(nextScaledTimbreLHX, nextScaledTimbreLHY, nextScaledTimbreLHZ);
+//        spheresLH.push_back(p2);
     }
 
     for (int i=0; i < spheresRH.size(); i++) {
@@ -270,10 +270,11 @@ void testApp::draw(){
             ofSphere(spheresRH[i], sphereRadius);
         }
     }
-    ofSetColor(0, 0, 127);
-    for (int i=0; i< spheresLH.size(); i++) {
-        ofSphere(spheresLH[i], sphereRadius);
-    }
+// CURRENTLY NOT DOING BLUE 
+//    ofSetColor(0, 0, 127);
+//    for (int i=0; i< spheresLH.size(); i++) {
+//        ofSphere(spheresLH[i], sphereRadius);
+//    }
 
     ofPopMatrix();
 	cam.end();
