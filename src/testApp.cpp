@@ -81,6 +81,7 @@ void testApp::setup(){
     transX = 0;
     transY = 0;
     transZ = 0;
+    minimumIndex = 0;
 
     // Set up our new, 3D world!
     // 0, 0, 0 is now center, not top-left
@@ -134,6 +135,9 @@ void testApp::update(){
         if (m.getAddress() == "/visuals/tick") {
             timbreIndex = timbreIndex + 6 % timbreData.size();  
         }
+        if (m.getAddress() == "minimum/index") {
+            minimumIndex = m.getArgAsInt32(0);    
+        }
     }
     // Get location data
     while(kinectRec.hasWaitingMessages()) {
@@ -168,13 +172,13 @@ void testApp::update(){
     float newZ = (currentRHZ - (currentTorsoZ * 0.60)) * windowSizeZ * 3;
 
     // Ignore garbage
-    if (abs(newX - transX) > 300) {
+    if (abs(newX - transX) > 200) {
         newX = transX;
     }
-    if (abs(newY - transY) > 300) {
+    if (abs(newY - transY) > 200) {
         newY = transY;
     }
-    if (abs(newZ - transZ) > 300) {
+    if (abs(newZ - transZ) > 200) {
         newZ = transZ;
     }
 
@@ -184,9 +188,9 @@ void testApp::update(){
     transZ = (int) ((transY * 0.5 + newY) / 1.5);
 
     // Log & update
-    ofLog(OF_LOG_NOTICE, ofToString(transX));
-    ofLog(OF_LOG_NOTICE, ofToString(transY));
-    ofLog(OF_LOG_NOTICE, ofToString(transZ));
+    //ofLog(OF_LOG_NOTICE, ofToString(transX));
+    //ofLog(OF_LOG_NOTICE, ofToString(transY));
+    //ofLog(OF_LOG_NOTICE, ofToString(transZ));
     controlPoint.set(transX, transY, transZ);
 
     // Send
@@ -254,12 +258,19 @@ void testApp::draw(){
         spheresLH.push_back(p2);
     }
 
-    ofSetColor(255, 0, 0);
-    for (int i=0; i< spheresRH.size(); i++) {
-        ofSphere(spheresRH[i], sphereRadius);
+    for (int i=0; i < spheresRH.size(); i++) {
+        if (i == minimumIndex) {
+            ofSetColor(255, 0, 0);
+            ofSphere(spheresRH[i], sphereRadius * 4);
+            ofSetColor(225, 225, 225);
+            ofLine(controlPoint, spheresRH[i]);
+        }
+        else {
+            ofSetColor(127, 0, 0);
+            ofSphere(spheresRH[i], sphereRadius);
+        }
     }
-
-    ofSetColor(0, 0, 255);
+    ofSetColor(0, 0, 127);
     for (int i=0; i< spheresLH.size(); i++) {
         ofSphere(spheresLH[i], sphereRadius);
     }
@@ -285,22 +296,6 @@ void testApp::keyReleased(int key){
 // --------------------------------------------------------------
 void testApp::mouseMoved(int x, int y){
 
-//	// Need to scale things to the timbres here
-//    // This will have to change once I get the kinect / leap in
-//    ofxOscMessage sendLocationData;
-//	int scaledX = (int)(transX * ((float)ranges[0] / (float)windowSizeX) + (maximums[0] + minimums[0]) / 2);
-//    int scaledY = (int)(transY * ((float)ranges[1] / (float)windowSizeY) + (maximums[1] + minimums[1]) / 2);
-//    int scaledZ = (int)(controlPoint.z * ((float)ranges[2] / (float)windowSizeZ) + (maximums[2] + minimums[2]) / 2);
-//    sendLocationData.setAddress("/mouse/position");
-
-//	sendLocationData.addIntArg(scaledX);
-//    sendLocationData.addIntArg(scaledY);
-//    sendLocationData.addIntArg(scaledZ);
-//    //ofLog(OF_LOG_NOTICE, ofToString(scaledX));
-//    //ofLog(OF_LOG_NOTICE, ofToString(scaledY));
-//    //ofLog(OF_LOG_NOTICE, ofToString(scaledZ));
-
-//	sender.sendMessage(sendLocationData);
 }
 
 //--------------------------------------------------------------

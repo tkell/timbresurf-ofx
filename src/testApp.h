@@ -44,6 +44,7 @@ class testApp : public ofBaseApp {
         ofPoint controlPoint; 
         vector<ofPoint> spheresRH;
         vector<ofPoint> spheresLH;
+        int minimumIndex;
 
         float currentRHX;
         float currentRHY;
