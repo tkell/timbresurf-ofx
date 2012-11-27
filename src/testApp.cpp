@@ -29,7 +29,7 @@ void testApp::setup(){
 
     cout << "Loading...\n";
 
-    // This is everything from 1451 and Billie Jean
+    // This is all four songs.
     maximums[0] = 273; maximums[1] = 145; maximums[2] = 300;
     maximums[3] = 125; maximums[4] = 272; maximums[5] = 89;
 
@@ -210,30 +210,23 @@ void testApp::update(){
     // Scale
     float newX = (currentRHX - currentTorsoX) * windowSizeX * 3;
     float newY = ((1 - currentTorsoY) - (1 - currentRHY)) * windowSizeY * -3;
-    float newZ = (currentRHZ - (currentTorsoZ * 0.60)) * windowSizeZ * 3;
+    float newZ = (currentRHZ - (currentTorsoZ * 0.825)) * windowSizeZ * 3;
 
-    float newVolume = 1 - currentLHY;
-
-    // Ignore garbage
-    if (abs(newX - transX) > 200) {
-        newX = transX;
+    float newVolume = (1 - currentLHY) * 1.5;
+    if (newVolume > 1.0) {
+        newVolume = 1.0;
     }
-    if (abs(newY - transY) > 200) {
-        newY = transY;
-    }
-    if (abs(newZ - transZ) > 200) {
-        newZ = transZ;
-    }
+    ofLog(OF_LOG_NOTICE, ofToString(newZ));
 
     // Smooth
     transX = (int) ((transX * 0.5 + newX ) / 1.5);
     transY = (int) ((transY * 0.5 + newY) / 1.5);
-    transZ = (int) ((transY * 0.5 + newY) / 1.5);
+    transZ = (int) ((transZ * 0.5 + newZ) / 1.5);
 
     // Log & update
     //ofLog(OF_LOG_NOTICE, ofToString(transX));
     //ofLog(OF_LOG_NOTICE, ofToString(transY));
-    //ofLog(OF_LOG_NOTICE, ofToString(transZ));
+    ofLog(OF_LOG_NOTICE, ofToString(transZ));
     controlPoint.set(transX, transY, transZ);
 
     // Send
@@ -241,7 +234,7 @@ void testApp::update(){
 	int scaledX = (int)(transX * ((float)ranges[0] / (float)windowSizeX) + (maximums[0] + minimums[0]) / 2);
     int scaledY = (int)(transY * ((float)ranges[1] / (float)windowSizeY) + (maximums[1] + minimums[1]) / 2);
     int scaledZ = (int)(transX * ((float)ranges[2] / (float)windowSizeZ) + (maximums[2] + minimums[2]) / 2);
-    sendLocationData.setAddress("/mouse/position");
+    sendLocationData.setAddress("/position");
 
 	sendLocationData.addIntArg(scaledX);
     sendLocationData.addIntArg(scaledY);
