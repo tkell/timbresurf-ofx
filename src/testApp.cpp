@@ -13,6 +13,8 @@ void testApp::setup(){
     cout << "Please select a track\n";
     cout << "1:  Onefourfiveone - D\n";
     cout << "2:  Michael Jackson - Billie Jean\n";
+    cout << "3:  Mozart - Enie Kleine Nachtmusik - I\n";
+    cout << "4:  The Beatles - A Hard Day's Night\n";
     cin >> track_number;
 
     cout << "Please select a difficulty\n";
@@ -28,11 +30,11 @@ void testApp::setup(){
     cout << "Loading...\n";
 
     // This is everything from 1451 and Billie Jean
-    maximums[0] = 273; maximums[1] = 145; maximums[2] = 210;
+    maximums[0] = 273; maximums[1] = 145; maximums[2] = 300;
     maximums[3] = 125; maximums[4] = 272; maximums[5] = 89;
 
-    minimums[0] = -69; minimums[1] = -232; minimums[2] = -228;
-    minimums[3] = -38; minimums[4] = -131; minimums[5] = -71;
+    minimums[0] = -129; minimums[1] = -232; minimums[2] = -245;
+    minimums[3] = -50; minimums[4] = -154; minimums[5] = -71;
 
     // 1451 - D
     if (track_number == 1) {
@@ -73,6 +75,47 @@ void testApp::setup(){
             sphereRadius = 1;
         }
     }
+
+    // Mozart - Eine Kleine
+    if (track_number == 3) {
+        if (difficulty_rating == 1) {
+            buffer = ofBufferFromFile("einekleine.bars.timbre"); // reading into the buffer
+            sphereRadius = 10;
+        }
+        else if (difficulty_rating == 2) {
+            buffer = ofBufferFromFile("einekleine.beats.timbre"); // reading into the buffer
+            sphereRadius = 5;
+        }
+        else if (difficulty_rating == 3) {
+            buffer = ofBufferFromFile("einekleine.tatums.timbre"); // reading into the buffer
+            sphereRadius = 2;
+        }
+        else if (difficulty_rating == 4) {
+            buffer = ofBufferFromFile("einekleine.segments.timbre"); // reading into the buffer
+            sphereRadius = 1;
+        }
+    }
+
+    // Beatles - Hard Day's Night
+    if (track_number == 4) {
+        if (difficulty_rating == 1) {
+            buffer = ofBufferFromFile("harddaysnight.bars.timbre"); // reading into the buffer
+            sphereRadius = 10;
+        }
+        else if (difficulty_rating == 2) {
+            buffer = ofBufferFromFile("harddaysnight.beats.timbre"); // reading into the buffer
+            sphereRadius = 5;
+        }
+        else if (difficulty_rating == 3) {
+            buffer = ofBufferFromFile("harddaysnight.tatums.timbre"); // reading into the buffer
+            sphereRadius = 2;
+        }
+        else if (difficulty_rating == 4) {
+            buffer = ofBufferFromFile("harddaysnight.segments.timbre"); // reading into the buffer
+            sphereRadius = 1;
+        }
+    }
+
 
     // Get the ranges
     for (int i = 0; i < 6; i++) {
@@ -149,9 +192,7 @@ void testApp::update(){
         // so:  
         if (m.getAddress() == "/joint") {
             if (m.getArgAsString(0) == "r_hand") {
-                currentLHX = m.getArgAsFloat(2);
                 currentLHY = m.getArgAsFloat(3);
-                currentLHZ = m.getArgAsFloat(4);
             }
             else if (m.getArgAsString(0) == "l_hand") {
                 currentRHX = m.getArgAsFloat(2);
@@ -170,6 +211,8 @@ void testApp::update(){
     float newX = (currentRHX - currentTorsoX) * windowSizeX * 3;
     float newY = ((1 - currentTorsoY) - (1 - currentRHY)) * windowSizeY * -3;
     float newZ = (currentRHZ - (currentTorsoZ * 0.60)) * windowSizeZ * 3;
+
+    float newVolume = 1 - currentLHY;
 
     // Ignore garbage
     if (abs(newX - transX) > 200) {
@@ -203,6 +246,7 @@ void testApp::update(){
 	sendLocationData.addIntArg(scaledX);
     sendLocationData.addIntArg(scaledY);
     sendLocationData.addIntArg(scaledZ);
+    sendLocationData.addFloatArg(newVolume);
 	sender.sendMessage(sendLocationData);
 
 
