@@ -15,6 +15,7 @@ void testApp::setup(){
     cout << "2:  Michael Jackson - Billie Jean\n";
     cout << "3:  Mozart - Enie Kleine Nachtmusik - I\n";
     cout << "4:  The Beatles - A Hard Day's Night\n";
+    cout << "5:  Tangerine Dream - Rising Runner Missed By Endless Sender\n";
     cin >> track_number;
 
     cout << "Please select a difficulty\n";
@@ -112,6 +113,26 @@ void testApp::setup(){
         }
         else if (difficulty_rating == 4) {
             buffer = ofBufferFromFile("harddaysnight.segments.timbre"); // reading into the buffer
+            sphereRadius = 1;
+        }
+    }
+
+    // Tangerine Dream - Rising Runner Missed By Endless Sender
+    if (track_number == 5) {
+        if (difficulty_rating == 1) {
+            buffer = ofBufferFromFile("tangerine.bars.timbre"); // reading into the buffer
+            sphereRadius = 10;
+        }
+        else if (difficulty_rating == 2) {
+            buffer = ofBufferFromFile("tangerine.beats.timbre"); // reading into the buffer
+            sphereRadius = 5;
+        }
+        else if (difficulty_rating == 3) {
+            buffer = ofBufferFromFile("tangerine.tatums.timbre"); // reading into the buffer
+            sphereRadius = 2;
+        }
+        else if (difficulty_rating == 4) {
+            buffer = ofBufferFromFile("tangerine.segments.timbre"); // reading into the buffer
             sphereRadius = 1;
         }
     }
